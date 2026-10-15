@@ -12,6 +12,9 @@ extern "C" int APS5_VABI sceContentExportGetProgress(std::int32_t expId);
 extern "C" int APS5_VABI sceContentExportCancel(std::int32_t expId);
 extern "C" int APS5_VABI sceContentExportFromDataWithThumbnail(std::int32_t expId, const ContentExportParam* param, const ContentExportCallbackParam* contentCallbackParam,
     const char* thumbnailType, const ContentExportCallbackParam* thumbnailCallbackParam, char* path, std::size_t pathBufferLength);
+extern "C" int APS5_VABI sceContentExportFromFile(std::int32_t expId, const ContentExportParam* param, const char* srcPath, char* path, std::size_t pathBufferLength);
+extern "C" int APS5_VABI sceContentExportFromData(std::int32_t expId, const ContentExportParam* param, std::size_t contentLength, ContentExportDataProvideFunc func, void* userData, char* path, std::size_t pathBufferLength);
+extern "C" int APS5_VABI sceContentExportFromFileWithThumbnail(std::int32_t expId, const ContentExportParam* param, const char* srcPath, const char* thumbnailPath, char* path, std::size_t pathBufferLength);
 
 namespace {
 
@@ -35,6 +38,30 @@ void Export(std::int32_t expId) {
     ContentExportCallbackParam content{};
     ContentExportCallbackParam thumbnail{};
     sceContentExportFromDataWithThumbnail(expId, &param, &content, "image/png", &thumbnail, path, sizeof(path));
+}
+
+int provideCalls = 0;
+
+int Provide(void** data, std::size_t* length, void* userData) {
+    ++provideCalls;
+    *data = userData;
+    *length = 0;
+    return 1;
+}
+
+void ExportFromFile(std::int32_t expId) {
+    ContentExportParam param{};
+    sceContentExportFromFile(expId, &param, "/app0/screenshot.png", path, sizeof(path));
+}
+
+void ExportFromData(std::int32_t expId) {
+    ContentExportParam param{};
+    sceContentExportFromData(expId, &param, 16, &Provide, nullptr, path, sizeof(path));
+}
+
+void ExportFromFileWithThumbnail(std::int32_t expId) {
+    ContentExportParam param{};
+    sceContentExportFromFileWithThumbnail(expId, &param, "/app0/screenshot.png", "/app0/thumb.png", path, sizeof(path));
 }
 
 }
@@ -69,12 +96,19 @@ int main() {
     Require(Throws<std::runtime_error>([&] { sceContentExportGetProgress(first); }));
     Require(Throws<std::runtime_error>([&] { sceContentExportCancel(first); }));
     Require(Throws<std::runtime_error>([&] { Export(first); }));
+    Require(Throws<std::runtime_error>([&] { ExportFromFile(first); }));
+    Require(Throws<std::runtime_error>([&] { ExportFromData(first); }));
+    Require(Throws<std::runtime_error>([&] { ExportFromFileWithThumbnail(first); }));
+    Require(provideCalls == 0);
     Require(path[0] == 0);
     Require(sceContentExportFinish(first) == 0);
     Require(Throws<std::invalid_argument>([&] { sceContentExportFinish(first); }));
     Require(Throws<std::invalid_argument>([&] { sceContentExportGetProgress(first); }));
     Require(Throws<std::invalid_argument>([&] { sceContentExportCancel(first); }));
     Require(Throws<std::invalid_argument>([&] { Export(first); }));
+    Require(Throws<std::invalid_argument>([&] { ExportFromFile(first); }));
+    Require(Throws<std::invalid_argument>([&] { ExportFromData(first); }));
+    Require(Throws<std::invalid_argument>([&] { ExportFromFileWithThumbnail(first); }));
     Require(Throws<std::invalid_argument>([] { sceContentExportFinish(0); }));
     Require(Throws<std::invalid_argument>([] { sceContentExportFinish(-1); }));
     sessions.erase(first);

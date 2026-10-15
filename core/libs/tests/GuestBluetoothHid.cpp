@@ -11,7 +11,9 @@ std::int32_t APS5_VABI sceBluetoothHidRegisterCallback(void* callback, std::int3
 std::int32_t APS5_VABI sceBluetoothHidUnregisterCallback();
 std::int32_t APS5_VABI sceBluetoothHidRegisterDevice(std::uint16_t vendorId, std::uint16_t productId);
 std::int32_t APS5_VABI sceBluetoothHidUnregisterDevice(std::uint16_t vendorId, std::uint16_t productId);
-int APS5_VABI sceBluetoothHidGetInputReport();
+std::int32_t APS5_VABI sceBluetoothHidGetDeviceName(std::uint64_t handle, void* name);
+std::int32_t APS5_VABI sceBluetoothHidGetInputReport(void* report, std::uint32_t reportId);
+std::int32_t APS5_VABI sceBluetoothHidSetOutputReport(std::uint64_t handle, std::uint32_t reportId, void* data, std::uint64_t length);
 }
 
 namespace {
@@ -46,11 +48,28 @@ int main() {
     Require(threw, "a null callback was accepted");
     threw = false;
     try {
-        sceBluetoothHidGetInputReport();
+        std::uint8_t report[16]{};
+        sceBluetoothHidGetInputReport(report, 1);
     } catch (const std::runtime_error&) {
         threw = true;
     }
     Require(threw, "an input report without a device did not throw");
+    threw = false;
+    try {
+        char name[128]{};
+        sceBluetoothHidGetDeviceName(1, name);
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    Require(threw, "a device name without a device did not throw");
+    threw = false;
+    try {
+        const std::uint8_t data[16]{};
+        sceBluetoothHidSetOutputReport(1, 1, const_cast<std::uint8_t*>(data), sizeof(data));
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    Require(threw, "an output report without a device did not throw");
     Require(sceBluetoothHidUnregisterDevice(0x44f, 0x1000) == 0, "device unregistration failed");
     Require(sceBluetoothHidUnregisterCallback() == 0, "callback unregistration failed");
     std::puts("BluetoothHid tests passed");

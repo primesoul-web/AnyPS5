@@ -1647,6 +1647,32 @@ struct AppContentBootParam {
 
 struct AppContentMountPoint { char data[16]; };
 
+struct Hmd2DeviceInformation {
+    std::uint32_t status;
+    std::uint32_t reserve0;
+    std::uint32_t panel_resolution_width;
+    std::uint32_t panel_resolution_height;
+    std::uint16_t flip_to_display_latency_90hz;
+    std::uint16_t flip_to_display_latency_120hz;
+    std::uint8_t hmu_mount;
+    std::uint8_t lens_separation_distance;
+    std::uint8_t reserve1[2];
+    float virtual_image_distance;
+};
+
+struct Hmd2FieldOfView {
+    float tan_out;
+    float tan_in;
+    float tan_top;
+    float tan_bottom;
+};
+
+static_assert(sizeof(Hmd2DeviceInformation) == 28);
+static_assert(offsetof(Hmd2DeviceInformation, panel_resolution_width) == 8);
+static_assert(offsetof(Hmd2DeviceInformation, hmu_mount) == 20);
+static_assert(offsetof(Hmd2DeviceInformation, virtual_image_distance) == 24);
+static_assert(sizeof(Hmd2FieldOfView) == 16);
+
 struct ContentExportInitParam2 {
     void* malloc_func;
     void* free_func;
@@ -1668,6 +1694,8 @@ struct ContentExportCallbackParam {
     void* func;
     void* user_data;
 };
+
+using ContentExportDataProvideFunc = int (*)(void** data, std::size_t* length, void* user_data);
 
 struct ContentSearchInitParam { std::size_t memory_size; };
 
