@@ -1,5 +1,7 @@
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
+#include <string>
 #include "SceTypes.hpp"
 #include "prx/libc/include/General.hpp"
 
@@ -18,7 +20,7 @@ constexpr std::uint32_t AUDIO_OUT2_MASTERING_STRUCT_ID_LIMITER_DEFAULT = 0x01010
 extern "C" {
 
 int APS5_VABI sceAudioOut2MasteringInit(uint32_t flags) {
-    if (flags != 0) NotImplemented_nid_no_patch(__func__);
+    if (flags != 0) throw std::runtime_error(std::string(__func__) + ": unsupported flags");
     return 0;
 }
 

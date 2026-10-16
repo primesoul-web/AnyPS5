@@ -1,7 +1,9 @@
 #include "prx/libc/include/general/VabiMacros.hpp"
 #include "prx/libSceNpTrophy2/include/NpTrophy2Types.hpp"
+#include <cstddef>
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 
 extern "C" {
 int APS5_VABI sceNpTrophy2RegisterUnlockCallback(void*, void*);
@@ -10,6 +12,10 @@ int APS5_VABI sceNpTrophy2GetGameInfo(int, int, NpTrophy2GameDetails*, NpTrophy2
 int APS5_VABI sceNpTrophy2GetGroupInfo(int, int, int, NpTrophy2GroupDetails*, NpTrophy2GroupData*);
 int APS5_VABI sceNpTrophy2GetTrophyInfo(int, int, int, NpTrophy2Details*, NpTrophy2Data*);
 int APS5_VABI sceNpTrophy2ShowTrophyList(int);
+int APS5_VABI sceNpTrophy2GetGameIcon(int, int, void*, std::size_t*);
+int APS5_VABI sceNpTrophy2GetGroupIcon(int, int, int, void*, std::size_t*);
+int APS5_VABI sceNpTrophy2GetTrophyIcon(int, int, int, void*, std::size_t*);
+int APS5_VABI sceNpTrophy2GetRewardIcon(int, int, int, void*, std::size_t*);
 }
 
 static void Require(bool value) { if (!value) std::abort(); }
@@ -20,6 +26,15 @@ template <typename Call> static bool ThrowsInvalidArgument(Call call) {
     try {
         call();
     } catch (const std::invalid_argument&) {
+        return true;
+    }
+    return false;
+}
+
+template <typename Call> static bool ThrowsRuntimeError(Call call) {
+    try {
+        call();
+    } catch (const std::runtime_error&) {
         return true;
     }
     return false;
@@ -57,4 +72,18 @@ int main() {
     Require(sceNpTrophy2GetTrophyInfo(1, 1, 3, nullptr, &trophyData) == 0);
     Require(trophyData.trophy_id == 3);
     Require(ThrowsInvalidArgument([] { sceNpTrophy2GetTrophyInfo(1, 1, 3, nullptr, nullptr); }));
+
+    std::size_t iconSize = 0xDEADBEEF;
+    Require(ThrowsRuntimeError([&] { sceNpTrophy2GetGameIcon(1, 1, nullptr, &iconSize); }));
+    Require(iconSize == 0);
+    iconSize = 0xDEADBEEF;
+    Require(ThrowsRuntimeError([&] { sceNpTrophy2GetGroupIcon(1, 1, 2, nullptr, &iconSize); }));
+    Require(iconSize == 0);
+    iconSize = 0xDEADBEEF;
+    Require(ThrowsRuntimeError([&] { sceNpTrophy2GetTrophyIcon(1, 1, 3, nullptr, &iconSize); }));
+    Require(iconSize == 0);
+    iconSize = 0xDEADBEEF;
+    Require(ThrowsRuntimeError([&] { sceNpTrophy2GetRewardIcon(1, 1, 3, nullptr, &iconSize); }));
+    Require(iconSize == 0);
+    Require(ThrowsRuntimeError([&] { sceNpTrophy2GetRewardIcon(1, 1, 3, nullptr, nullptr); }));
 }

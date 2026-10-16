@@ -1673,6 +1673,42 @@ static_assert(offsetof(Hmd2DeviceInformation, hmu_mount) == 20);
 static_assert(offsetof(Hmd2DeviceInformation, virtual_image_distance) == 24);
 static_assert(sizeof(Hmd2FieldOfView) == 16);
 
+struct Hmd2ReprojectionState {
+    std::uint64_t output_mode;
+    std::uint32_t timing_us;
+};
+
+struct Hmd2SizeAlign {
+    std::uint64_t size;
+    std::uint64_t align;
+};
+
+struct Hmd2ReprojectionInitializeParam {
+    void* reprojection_buffer;
+    void* display_buffer;
+    std::int32_t thread_priority;
+    std::int32_t cpu_affinity_mask;
+    std::uint32_t pipe_id;
+    std::uint32_t queue_id;
+    std::uint32_t type;
+    void* see_through_buffer;
+    std::int32_t reprojection_timing;
+    std::int32_t reserved[5];
+};
+
+static_assert(sizeof(Hmd2ReprojectionState) == 16);
+static_assert(alignof(Hmd2ReprojectionState) == 8);
+static_assert(offsetof(Hmd2ReprojectionState, timing_us) == 8);
+static_assert(sizeof(Hmd2SizeAlign) == 16);
+static_assert(alignof(Hmd2SizeAlign) == 8);
+static_assert(sizeof(Hmd2ReprojectionInitializeParam) == 72);
+static_assert(alignof(Hmd2ReprojectionInitializeParam) == 8);
+static_assert(offsetof(Hmd2ReprojectionInitializeParam, thread_priority) == 16);
+static_assert(offsetof(Hmd2ReprojectionInitializeParam, type) == 32);
+static_assert(offsetof(Hmd2ReprojectionInitializeParam, see_through_buffer) == 40);
+static_assert(offsetof(Hmd2ReprojectionInitializeParam, reprojection_timing) == 48);
+static_assert(offsetof(Hmd2ReprojectionInitializeParam, reserved) == 52);
+
 struct ContentExportInitParam2 {
     void* malloc_func;
     void* free_func;
